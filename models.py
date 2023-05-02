@@ -1,4 +1,4 @@
-"""Models for Cupcake app."""
+"""Models for Notes app."""
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -17,7 +17,7 @@ def connect_db(app):
     db.init_app(app)
 
 class User(db.Model):
-    """"create instances of cupcake"""
+    """"create User instance"""
 
     __tablename__ = "users"
 
@@ -33,7 +33,8 @@ class User(db.Model):
 
     email = db.Column(
         db.String(50),
-        nullable=False
+        nullable=False,
+        unique=True
     )
 
     first_name = db.Column(
@@ -48,6 +49,7 @@ class User(db.Model):
 
     @classmethod
     def register_user(cls, username, password, email, first_name, last_name):
+        """static class method to create a user with hashed password"""
 
         hashed = b.generate_password_hash(password).decode("utf8")
         return cls(username=username,
@@ -57,12 +59,27 @@ class User(db.Model):
                    last_name=last_name )
 
     @classmethod
-    def login_user(cls, username, password):
+    def authenticate(cls, username, password):
+        """static class authenticate a user via username and password"""
 
         user = cls.query.filter_by(username=username).one_or_none()
 
-        if user and bcrypt.check_password_hash(user.password, password):
-            # return user instance
+        if user and b.check_password_hash(user.password, password):
             return user
+
         else:
             return False
+
+# class Note(db.Model):
+#     """create Note instance"""
+
+#     id = db.Column(
+#         db.Integer,
+#         primary_key=True,
+#         autoincrement=True
+#     )
+
+#     title = db.Column(
+#         db.String(100),
+#         nullable=False
+#     )

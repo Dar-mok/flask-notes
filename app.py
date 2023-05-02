@@ -1,11 +1,11 @@
-"""Flask app for CupcNotesakes"""
+"""Flask app for Notes"""
 
 import os
 
-from flask import Flask, render_template, flash, redirect, request, jsonify
+from flask import Flask, render_template, flash, redirect, request, jsonify, session
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import connect_db, User
+from models import db, connect_db, User
 from forms import RegisterForm, LoginForm, CSRFProtectForm
 
 app = Flask(__name__)
@@ -13,9 +13,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    "DATABASE_URL", "postgresql:///cupcakes")
+    "DATABASE_URL", "postgresql:///notes")
+
+USER_ID = "user_id"
 
 connect_db(app)
+
+db.create_all()
 
 # Having the Debug Toolbar show redirects explicitly is often useful;
 # however, if you want to turn it off, you can uncomment this line:
@@ -49,7 +53,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        session["user_id"] = user.username
+        #TODO: global constant for user_id
+        session[USER_ID] = user.username
         return redirect(f"users/{name}")
 
     return render_template("register.html", form=form)
@@ -64,14 +69,40 @@ def login():
         name = form.username.data
         pwd = form.password.data
 
-        user = User.login_user(name, pwd)
+        user = User.authenticate(name, pwd)
 
         if user:
-            session["user_id"] = user.username
+            session[USER_ID] = user.username
             return redirect(f"/users/{name}")
 
         else:
             form.username.errors = ["Bad name/password"]
 
-    return render_template("register.html", form=form)
+    return render_template("login.html", form=form)
 
+@app.get("/users/<username>")
+def display_profile(username):
+    """display user profile page"""
+
+    if not session.get(USER_ID) == username:
+        flash("You must be logged in to see that page!")
+
+        return redirect("/login")
+
+    form = CSRFProtectForm()
+    user = User.query.get_or_404(username)
+
+    return render_template("profile_page.html", user=user, form=form)
+
+
+@app.post("/logout")
+def logout():
+    """logout user by clearing session"""
+
+    form = CSRFProtectForm()
+
+    if form.validate_on_submit():
+
+        session.pop(USER_ID, None)
+
+    return redirect("/login")
