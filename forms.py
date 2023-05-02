@@ -71,8 +71,27 @@ class LoginForm(FlaskForm):
 class CSRFProtectForm(FlaskForm):
     """Form to validate logout"""
 
+class AddNoteForm(FlaskForm):
+    """Form for updating a note."""
+
+    title = StringField(
+                    "Title",
+                    validators=[
+                        InputRequired(),
+                        Length(min=1, max=100)
+                    ]
+                )
+
+    content = StringField(
+                    "Content",
+                    validators=[
+                        InputRequired(),
+                        Length(min=1, max=100)
+                    ]
+                )
+    
 class UpdateNoteForm(FlaskForm):
-"""Form for updating a note."""
+    """Form for updating a note."""
 
     title = StringField(
                     "Title",

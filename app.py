@@ -5,8 +5,8 @@ import os
 from flask import Flask, render_template, flash, redirect, request, jsonify, session
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import db, connect_db, User
-from forms import RegisterForm, LoginForm, CSRFProtectForm, UpdateNoteForm
+from models import db, connect_db, User, Note
+from forms import RegisterForm, LoginForm, CSRFProtectForm, UpdateNoteForm, AddNoteForm
 
 app = Flask(__name__)
 
@@ -34,6 +34,8 @@ def redirect_register():
 
     return redirect("/register")
 
+#--------USER ROUTES--------
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """If completed register form, create User object and save
@@ -53,7 +55,6 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        #TODO: global constant for user_id
         session[USER_ID] = user.username
         return redirect(f"users/{name}")
 
@@ -94,6 +95,21 @@ def info_user_notes(username):
 
     return render_template("profile_page.html", user=user, form=form)
 
+@app.post("/users/<username>/delete")
+def delete_user(username):
+    """display user profile page with notes info"""
+
+    form = CSRFProtectForm()
+
+    if form.validate_on_submit():
+        user = User.query.get_or_404(username)
+
+        session.pop(USER_ID, None)
+
+        db.session.delete(user)
+        db.session.commit
+
+    return redirect('/')
 
 @app.post("/logout")
 def logout():
@@ -107,21 +123,48 @@ def logout():
 
     return redirect("/login")
 
-@app.route("/notes/<int:note_id>/update", method=["POST", "GET"])
-def update_note(note_id):
-    """display form to edit a note"""
+#--------NOTES ROUTES--------
+@app.route("/user/<username>/notes/add", methods=["POST", "GET"])
+def add_note(username):
+    """display form to add a note"""
 
-    form = UpdateNoteForm()
+    form = AddNoteForm()
 
     if form.validate_on_submit():
 
         title = form.title.data
         content = form.content.data
+        owner = username
 
-        note = Note.query.get_or_404(note_id)
-        note.title = title
-        note.content = content
+        note = Note(title=title, content=content, owner_username=owner)
+
+        db.session.add(note)
+        db.session.commit()
+
+        return redirect(f'/users/{owner}')
+
+    return render_template('note_add_form.html', form=form)
+
+
+@app.route("/notes/<int:note_id>/update", methods=["POST", "GET"])
+def update_note(note_id):
+    """display form to edit a note"""
+
+    note = Note.query.get_or_404(note_id)
+
+    form = UpdateNoteForm()
+
+
+    if form.validate_on_submit():
+
+        note.title = form.title.data
+        note.content = form.content.data
 
         db.session.commit()
+
+        return redirect(f'/users/{note.user.username}')
+
+    return render_template('note_edit_form.html', note=note, form=form)
+
 
 
