@@ -30,9 +30,11 @@ def redirect_register():
 
     return redirect("/register")
 
-@app.get("/register")
-def display_register():
-    """show register form"""
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """If completed register form, create User object and save
+     to DB and redirect to user's page, else, render the register form"""
+
     form = RegisterForm()
 
     if form.validate_on_submit():
@@ -42,5 +44,34 @@ def display_register():
         first_name = form.first_name.data
         last_name = form.last_name.data
 
-        
+        user = User.register_user(name, pwd, email, first_name, last_name)
+
+        db.session.add(user)
+        db.session.commit()
+
+        session["user_id"] = user.username
+        return redirect(f"users/{name}")
+
+    return render_template("register.html", form=form)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """either show a login form or login user"""
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        name = form.username.data
+        pwd = form.password.data
+
+        user = User.login_user(name, pwd)
+
+        if user:
+            session["user_id"] = user.username
+            return redirect(f"/users/{name}")
+
+        else:
+            form.username.errors = ["Bad name/password"]
+
+    return render_template("register.html", form=form)
 

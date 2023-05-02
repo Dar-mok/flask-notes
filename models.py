@@ -1,10 +1,10 @@
 """Models for Cupcake app."""
 
 from flask_sqlalchemy import SQLAlchemy
-im
+from flask_bcrypt import Bcrypt
 
 db = SQLAlchemy()
-DEFAULT_IMAGE_URL = "https://tinyurl.com/demo-cupcake"
+b = Bcrypt()
 
 def connect_db(app):
     """Connect this database to provided Flask app.
@@ -49,4 +49,20 @@ class User(db.Model):
     @classmethod
     def register_user(cls, username, password, email, first_name, last_name):
 
-        hashed = bcrypt
+        hashed = b.generate_password_hash(password).decode("utf8")
+        return cls(username=username,
+                   password=hashed,
+                   email=email,
+                   first_name=first_name,
+                   last_name=last_name )
+
+    @classmethod
+    def login_user(cls, username, password):
+
+        user = cls.query.filter_by(username=username).one_or_none()
+
+        if user and bcrypt.check_password_hash(user.password, password):
+            # return user instance
+            return user
+        else:
+            return False
