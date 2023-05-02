@@ -5,7 +5,8 @@ import os
 from flask import Flask, render_template, flash, redirect, request, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
 
-# from models
+from models import connect_db, User
+from forms import RegisterForm, LoginForm, CSRFProtectForm
 
 app = Flask(__name__)
 
@@ -29,10 +30,17 @@ def redirect_register():
 
     return redirect("/register")
 
-@app.get("register")
-def redirect_register():
-    """show form aaand"""
-    form = #the form
+@app.get("/register")
+def display_register():
+    """show register form"""
+    form = RegisterForm()
 
     if form.validate_on_submit():
+        name = form.username.data
+        pwd = form.password.data
+        email = form.email.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+
+        
 

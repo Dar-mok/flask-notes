@@ -1,6 +1,7 @@
 """Models for Cupcake app."""
 
 from flask_sqlalchemy import SQLAlchemy
+im
 
 db = SQLAlchemy()
 DEFAULT_IMAGE_URL = "https://tinyurl.com/demo-cupcake"
@@ -44,3 +45,8 @@ class User(db.Model):
         db.String(30),
         nullable=False
     )
+
+    @classmethod
+    def register_user(cls, username, password, email, first_name, last_name):
+
+        hashed = bcrypt
