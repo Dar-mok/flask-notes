@@ -6,14 +6,14 @@ from flask import Flask, render_template, flash, redirect, request, jsonify, ses
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User
-from forms import RegisterForm, LoginForm, CSRFProtectForm
+from forms import RegisterForm, LoginForm, CSRFProtectForm, UpdateNoteForm
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = "secret"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    "DATABASE_URL", "postgresql:///notes")
+    "DATABASE_URL", "postgresql:///flask_notes")
 
 USER_ID = "user_id"
 
@@ -81,8 +81,8 @@ def login():
     return render_template("login.html", form=form)
 
 @app.get("/users/<username>")
-def display_profile(username):
-    """display user profile page"""
+def info_user_notes(username):
+    """display user profile page with notes info"""
 
     if not session.get(USER_ID) == username:
         flash("You must be logged in to see that page!")
@@ -106,3 +106,22 @@ def logout():
         session.pop(USER_ID, None)
 
     return redirect("/login")
+
+@app.route("/notes/<int:note_id>/update", method=["POST", "GET"])
+def update_note(note_id):
+    """display form to edit a note"""
+
+    form = UpdateNoteForm()
+
+    if form.validate_on_submit():
+
+        title = form.title.data
+        content = form.content.data
+
+        note = Note.query.get_or_404(note_id)
+        note.title = title
+        note.content = content
+
+        db.session.commit()
+
+

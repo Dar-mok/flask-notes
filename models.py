@@ -70,16 +70,34 @@ class User(db.Model):
         else:
             return False
 
-# class Note(db.Model):
-#     """create Note instance"""
 
-#     id = db.Column(
-#         db.Integer,
-#         primary_key=True,
-#         autoincrement=True
-#     )
 
-#     title = db.Column(
-#         db.String(100),
-#         nullable=False
-#     )
+class Note(db.Model):
+    """create Note instance"""
+
+    __tablename__ = "notes"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    title = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    content = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    owner_username = db.Column(
+        db.Text(20),
+        nullable=False,
+        db.ForeignKey('users.username')
+    )
+
+    user = db.relationship("User", backref="notes")

@@ -11,6 +11,12 @@
     </ul>
   </p>
 
+  {% for note in user.notes%}
+  <h3>Note title: {{note.title}}</h3>
+  <p>{{note.content}}</p>
+  <a href="/notes/{{note_id/update}}"></a>>
+  {% endfor %}
+
   <form action="/logout" method="POST">
     {{form.hidden_tag()}}
     <button type="submit" class="btn btn-primary">Logout</button>
